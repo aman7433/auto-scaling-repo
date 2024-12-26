@@ -31,8 +31,8 @@ jobs:
             # Clone the repository if it's not already there, or pull the latest changes
             if [ ! -d "/home/${{ secrets.USER }}" ]; then
               git clone https://github.com/deparkes/simple-django-app.git /home/${{ secrets.USER }}
-            else
-              cd /home/${{ secrets.USER }} && git pull origin main
+            # else
+            #   cd /home/${{ secrets.USER }} && git pull origin main
             fi
 
             # Navigate to the project directory
