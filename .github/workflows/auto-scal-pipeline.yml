@@ -1,26 +1,52 @@
-name: Jenkins Deploy
+name: Deploy Django Project to Server
 
 on:
   push:
     branches:
-      - main   # Trigger the action when pushing to the main branch (or any branch you want)
-  workflow_dispatch:  # Allows manual triggering from the GitHub UI
+      - main  # Trigger this action when pushing to the 'main' branch
 
 jobs:
-  jenkins-deploy:
-    runs-on: ubuntu-latest  # Use an Ubuntu runner for the job
+  deploy:
+    runs-on: ubuntu-latest  # Use the latest Ubuntu runner
+
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout code
+      # Step 1: Checkout the code from the repository
+      - name: Checkout Code
         uses: actions/checkout@v2
 
-      # Step 2: Trigger Jenkins Job
-      - name: Trigger Jenkins Deployment
-        env:
-          JENKINS_URL: ${{ secrets.JENKINS_URL }}
-          JENKINS_USER: ${{ secrets.JENKINS_USER }}
-          JENKINS_API_TOKEN: ${{ secrets.JENKINS_API_TOKEN }}
+      # Step 2: Set up SSH to access the remote server
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.MAIN_KEY }}
+
+      # Step 3: SSH into the remote server and clone the repository
+      - name: Clone repository and set up Django
         run: |
-          curl -X POST \
-          -u $JENKINS_USER:$JENKINS_API_TOKEN \
-          $JENKINS_URL/job/your-jenkins-job-name/build
+          ssh -o StrictHostKeyChecking=no ${{ secrets.SSH_USER }}@${{ secrets.SERVER_IP }} << 'EOF'
+            # Update the server and install necessary packages
+            sudo apt update && sudo apt upgrade -y
+            sudo apt install -y git python3-pip python3-dev libpq-dev
+
+            # Clone the repository if it's not already there, or pull the latest changes
+            if [ ! -d "/home/${{ secrets.USER }}" ]; then
+              git clone https://github.com/deparkes/simple-django-app.git /home/${{ secrets.USER }}
+            else
+              cd /home/${{ secrets.USER }} && git pull origin main
+            fi
+
+            # Navigate to the project directory
+            cd /home/${{ secrets.USER }}
+
+            # Install the required dependencies
+            pip3 install -r requirements.txt
+
+            # Run migrations
+            python3 manage.py migrate
+
+            # Collect static files (if needed)
+            python3 manage.py collectstatic --noinput
+
+            # Optionally, start the Django server (replace with Gunicorn or other production server for production)
+            python3 manage.py runserver 0.0.0.0:8000
+          EOF
