@@ -1,0 +1,26 @@
+name: Jenkins Deploy
+
+on:
+  push:
+    branches:
+      - main   # Trigger the action when pushing to the main branch (or any branch you want)
+  workflow_dispatch:  # Allows manual triggering from the GitHub UI
+
+jobs:
+  jenkins-deploy:
+    runs-on: ubuntu-latest  # Use an Ubuntu runner for the job
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Trigger Jenkins Job
+      - name: Trigger Jenkins Deployment
+        env:
+          JENKINS_URL: ${{ secrets.JENKINS_URL }}
+          JENKINS_USER: ${{ secrets.JENKINS_USER }}
+          JENKINS_API_TOKEN: ${{ secrets.JENKINS_API_TOKEN }}
+        run: |
+          curl -X POST \
+          -u $JENKINS_USER:$JENKINS_API_TOKEN \
+          $JENKINS_URL/job/your-jenkins-job-name/build
