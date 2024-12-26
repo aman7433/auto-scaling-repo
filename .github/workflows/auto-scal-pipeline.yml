@@ -7,7 +7,7 @@ on:
   #     - main  # Trigger this action when pushing to the 'main' branch
 
 jobs:
-  deploy:
+  build:
     runs-on: ubuntu-latest  # Use the latest Ubuntu runner
 
     steps:
