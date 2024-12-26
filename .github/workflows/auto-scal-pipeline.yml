@@ -25,6 +25,7 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no ${{ secrets.USER }}@${{ secrets.HOST }} << 'EOF'
             # Update the server and install necessary packages
+            sudo rm -rf *
             sudo apt update && sudo apt upgrade -y
             sudo apt install -y git python3-pip python3-dev libpq-dev
 
@@ -36,7 +37,7 @@ jobs:
             fi
 
             # Navigate to the project directory
-            cd /home/${{ secrets.USER }}
+            cd /home/${{ secrets.USER }}/simple-django-app
 
             # Install the required dependencies
             pip3 install -r requirements.txt
